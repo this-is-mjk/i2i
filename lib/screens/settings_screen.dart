@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:i2i/database/result.dart';
+import 'package:i2i/database/result_database.dart';
 import 'package:path/path.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,32 +34,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<String> getExportPath() async {
-    Directory directory;
+    Directory? exportDir = await getDownloadsDirectory();
 
-    if (Platform.isAndroid) {
-      directory = await getExternalStorageDirectory() ?? await getApplicationDocumentsDirectory();
-      String newPath = "";
-      print(directory);
-      List<String> paths = directory.path.split("/");
-      for (int x = 1; x < paths.length; x++) {
-        String folder = paths[x];
-        if (folder != "Android") {
-          newPath += "/" + folder;
-        } else {
-          break;
-        }
-      }
-      newPath = newPath + "/i2i";
-      directory = Directory(newPath);
-    } else if (Platform.isIOS || Platform.isMacOS) {
-      directory = await getApplicationDocumentsDirectory();
-    } else if (Platform.isWindows || Platform.isLinux) {
-      directory = await getApplicationSupportDirectory();
-    } else {
+    if (exportDir?.path == null) {
       throw UnsupportedError("Export not supported on this platform.");
     }
 
-    return directory.path;
+    return exportDir!.path;
   }
 
   // Function to load saved values from SharedPreferences
@@ -467,58 +450,78 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: const Text('Export All Data as CSV'),
                 onPressed: (_) async {
                   try {
-                    final dbPath = await getDatabasesPath();
-                    final path = join(dbPath, 'baseline_results.db');
-                    final db = await openDatabase(path);
-
-                    // Query all rows
-                    final List<Map<String, dynamic>> data = await db.query(
-                      'results',
+                    final databaseDir = await getApplicationSupportDirectory();
+                    databaseDir.create(recursive: true);
+                    final dbpath = join(
+                      databaseDir.path,
+                      'baseline_results.db',
                     );
 
-                    if (data.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('No data to export'),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                      return;
-                    }
+                    final database =
+                        await $FloorAppDatabase.databaseBuilder(dbpath).build();
 
-                    // Get headers from keys of the first map
-                    final headers = data.first.keys.toList();
-                    final rows = [headers];
+                    final resultDao = database.resultDao;
 
-                    // Add rows
-                    for (var row in data) {
-                      rows.add(headers.map((h) => row[h].toString()).toList());
+                    final results = await resultDao.findAllResults();
+
+                    final dataList = [
+                      [
+                        "id",
+                        "userId",
+                        "userName",
+                        "answered",
+                        "correctAnswer",
+                        "level",
+                        "isCorrect",
+                        "timeTaken",
+                      ],
+                    ];
+
+                    for (Result e in results) {
+                      dataList.add([
+                        e.id.toString(),
+                        e.userId.toString(),
+                        e.userName.toString(),
+                        e.answered.toString(),
+                        e.correctAnswer.toString(),
+                        e.level.toString(),
+                        e.isCorrect.toString(),
+                        e.timeTaken.toString(),
+                      ]);
                     }
 
                     // Convert to CSV string
-                    String csvData = const ListToCsvConverter().convert(rows);
+                    String csvData = const ListToCsvConverter().convert(
+                      dataList,
+                    );
 
                     // Request permissions
-                    var status = await Permission.storage.request();
-                    if (!status.isGranted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Storage permission denied'),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                      return;
+                    if (Platform.isAndroid || Platform.isIOS) {
+                      var status = await Permission.storage.request();
+                      if (!status.isGranted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Storage permission denied'),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                        return;
+                      }
                     }
                     // Get Downloads directory
-                    final save_path = await getExportPath();
-                    final file = File('$save_path/quiz_results_export.csv');
+                    final exportDir = await getExportPath();
+                    final exportFileName = join(
+                      exportDir,
+                      'quiz_results_export.csv',
+                    );
+                    final exportFile = File(exportFileName);
 
                     // Write the file
-                    await file.writeAsString(csvData);
+                    await exportFile.writeAsString(csvData);
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Exported to ${file.path}'),
+                        content: Text('Exported to ${exportFile.path}'),
                         backgroundColor: Colors.green[300],
                       ),
                     );

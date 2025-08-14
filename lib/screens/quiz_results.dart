@@ -1,6 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:i2i/components/common_button.dart';
 import 'package:i2i/components/objects/questions.dart';
+import 'package:i2i/database/result.dart';
+import 'package:i2i/database/result_database.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -65,42 +70,46 @@ class _ResultPageState extends State<ResultPage> {
     String userName,
     int level,
   ) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'baseline_results.db');
-
-    final db = await openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute('''
-        CREATE TABLE IF NOT EXISTS results (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          userId TEXT,
-          userName TEXT,
-          answered TEXT,
-          correctAnswer TEXT,
-          level INTEGER,
-          isCorrect INTEGER,
-          timeTaken INTEGER
-        )
-      ''');
-      },
+    final databaseDir = await getApplicationSupportDirectory();
+    databaseDir.create(recursive: true);
+    final resultDatabaseFileName = join(
+      databaseDir.path,
+      'baseline_results.db',
     );
 
+    // ########################
+    final database =
+        await $FloorAppDatabase.databaseBuilder(resultDatabaseFileName).build();
+
+    final resultDao = database.resultDao;
+
+    // final results = await resultDao.findResultById(1);
+    // ########################
+
     for (var q in widget.questions) {
-      await db.insert('results', {
-        'userId': userId,
-        'userName': userName,
-        'answered': q.answered ?? "",
-        'correctAnswer': q.correctAnswer,
-        'level': level,
-        'isCorrect': q.isAnswerCorrect() ? 1 : 0,
-        'timeTaken': q.timeTakenInSeconds,
-      });
+      final result = Result(
+        userId,
+        userName,
+        q.answered ?? "",
+        q.correctAnswer,
+        level,
+        q.isAnswerCorrect() ? 1 : 0,
+        q.timeTakenInSeconds,
+      );
+
+      await resultDao.insertResult(result);
+
+      // await db.insert('results', {
+      //   'userId': userId,
+      //   'userName': userName,
+      //   'answered': q.answered ?? "",
+      //   'correctAnswer': q.correctAnswer,
+      //   'level': level,
+      //   'isCorrect': q.isAnswerCorrect() ? 1 : 0,
+      //   'timeTaken': q.timeTakenInSeconds,
+      // });
     }
-
   }
-
 
   Container resultText(
     double topMargin,

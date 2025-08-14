@@ -46,6 +46,7 @@ dependencies:
   permission_handler: ^12.0.0+1
   flutter_launcher_icons: ^0.14.3
   file_saver: ^0.2.14
+  floor: ^1.4.2
 
 dev_dependencies:
   flutter_test:
@@ -57,10 +58,17 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
-
+  floor_generator: ^1.4.2
+  build_runner: ^2.1.2
+  flutter_launcher_icons: "^0.14.4"
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
-
+flutter_launcher_icons:
+  android: true
+  ios: true
+  Windows: true
+  macOS: true
+  image_path: "assets/appIcon/appIcon.jpg"
 # The following section is specific to Flutter packages.
 flutter:
 
@@ -72,6 +80,10 @@ flutter:
     - assets/animations/home.json
     - assets/BaselineImages/
     - assets/images/
+    - assets/
+    - assets/appIcon/
+    - assets/Caricaiture/
+    - assets/Exaggerated_caricature/
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

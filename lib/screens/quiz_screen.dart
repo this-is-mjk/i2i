@@ -1,27 +1,30 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:i2i/components/objects/questions.dart';
 import 'package:i2i/components/quiz_pages.dart';
-import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'quiz_results.dart';
+
 const List<String> emotionOptions = [
-  'Anger',
-  'Sad',
-  'Happy',
-  'Fear',
-  'Surprise',
-  'Disgust',
-  'Normal',
+  'Anger / ग़ुस्सा',
+  'Sad / दुखी',
+  'Happy / ख़ुशी',
+  'Fear / डर',
+  'Surprise / आश्चर्य',
+  'Disgust / घृणा',
+  'Neutral / सामान्य',
 ];
 
 const emotionMap = {
-  'A': 'Anger',
-  'H': 'Happy',
-  'S': 'Sad',
-  'F': 'Fear',
-  'P': 'Surprise',
-  'D': 'Disgust',
-  'N': 'Normal',
+  'A': 'Anger /  ग़ुस्सा',
+  'H': 'Happy / ख़ुशी',
+  'S': 'Sad / दुखी',
+  'F': 'Fear / डर',
+  'P': 'Surprise / आश्चर्य',
+  'D': 'Disgust / घृणा',
+  'N': 'Neutral / सामान्य',
 };
 
 const emotionDescriptions = {
@@ -32,8 +35,8 @@ const emotionDescriptions = {
   'Fear': 'Wide eyes and tense body language often signal fear.',
   'Surprise': 'Raised eyebrows and open mouth often suggest surprise.',
   'Disgust': 'A wrinkled nose and raised upper lip are signs of disgust.',
-  'Normal':
-      'A relaxed expression with neutral features indicates a normal state.',
+  'Neutral':
+      'A relaxed expression with neutral features indicates a Neutral state.',
 };
 
 List<String> imageFiles = [
@@ -106,7 +109,7 @@ Future<List<Question>> decideQuestions() async {
         emotionDescriptions[emotion] ?? 'No description available';
 
     return Question(
-      questionString: "What emotion is shown in this image?",
+      questionString: "Identify the emotion? / भावना पहचानें?",
       imageId: "assets/BaselineImages/$imageFile",
       correctAnswer: emotion,
       options: decideOptions(emotion, level),
@@ -134,7 +137,40 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Learn')),
+      appBar: AppBar(
+        title: const Text('Learn / सीखें'),
+        actions: [
+          Container(
+            margin: EdgeInsets.fromLTRB(0, 5, 5, 3),
+            child: Padding(
+              padding: EdgeInsets.only(right: 15.0, top: 0.0, bottom: 2.0),
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  backgroundColor: Colors.white,
+                ),
+                onPressed: () async {
+                  final questions = await _questions;
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ResultPage(questions: questions),
+                    ),
+                  );
+                },
+                child: Text(
+                  "End Test",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: FutureBuilder<List<Question>>(
         future: _questions,
         builder: (context, snapshot) {
@@ -143,6 +179,7 @@ class _QuizScreenState extends State<QuizScreen> {
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (snapshot.hasData) {
+            final questions = snapshot.data!;
             return QuizPages(questions: snapshot.data!);
           } else {
             return const Center(child: Text('No questions available.'));

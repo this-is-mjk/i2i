@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:i2i/components/common_button.dart';
+import 'package:i2i/database/result_database.dart';
 import 'package:i2i/screens/quiz_screen.dart';
-import '../screens/settings_screen.dart'; // Import the settings screen
 import 'package:lottie/lottie.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+
+import '../screens/settings_screen.dart'; // Import the settings screen
 
 // final ThemeData lightTheme = ThemeData(
 //   brightness: Brightness.light,
@@ -138,13 +142,21 @@ void runBaseLine(BuildContext context) {
   ).push(MaterialPageRoute(builder: (context) => const QuizScreen()));
 }
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final databaseDir = await getApplicationSupportDirectory();
+  databaseDir.create(recursive: true);
+  final path = join(databaseDir.path, 'baseline_results.db');
+
+  final database = await $FloorAppDatabase.databaseBuilder(path).build();
+
+  final resultDao = database.resultDao;
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -213,12 +225,13 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             SizedBox(height: 5.0),
-            CommonButton(onPressed: runTest, text: 'Teach', isOutlined: true),
-            SizedBox(height: 15.0),
             CommonButton(
-              onPressed: () => runBaseLine(context),
-              text: 'Conduct Baseline',
+              onPressed: runTest,
+              text: 'Intervention',
+              isOutlined: true,
             ),
+            SizedBox(height: 15.0),
+            CommonButton(onPressed: () => runBaseLine(context), text: 'Test'),
           ],
         ),
       ),
