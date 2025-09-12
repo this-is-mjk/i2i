@@ -33,8 +33,19 @@ Future<Map<String, double>> _buildErrorDistribution() async {
   // Count mistakes per emotion
   final Map<String, int> counts = {};
   for (var r in wrongResults) {
-    final key = r.correctAnswer; // or r.correctAnswer[0] if char is your key
+    final key = r.correctAnswer;
     counts[key] = (counts[key] ?? 0) + 1;
+  }
+
+  // Ensure all emotions are present (even if 0 mistakes)
+  for (var e in emotionMap.values.toSet()) {
+    counts.putIfAbsent(e, () => 0);
+  }
+
+  // Give base weight (so all emotions appear) + extra weight for mistakes
+  final Map<String, int> weights = {};
+  for (var e in counts.keys) {
+    weights[e] = 1 + counts[e]!; // base 1 + number of mistakes
   }
   // Convert to probability distribution
   final total = counts.values.fold<int>(0, (a, b) => a + b);
@@ -47,6 +58,7 @@ Future<List<Question>> decideQuestions() async {
   int total = prefs.getInt("baselineQuestionNumber") ?? 5;
 
   final probs = await _buildErrorDistribution();
+  print(probs);
 
   // fallback if no history
   if (probs.isEmpty) {
@@ -63,11 +75,6 @@ Future<List<Question>> decideQuestions() async {
         InterventionImageFiles.where(
           (f) => emotionMap[f[0]] == chosenEmotion,
         ).toList();
-
-    if (pool.isEmpty) {
-      // fallback random if no images for that emotion
-      pool.addAll(InterventionImageFiles);
-    }
     pool.shuffle(rand);
     selectedImages.add(pool.first);
   }

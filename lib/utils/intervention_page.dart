@@ -200,7 +200,7 @@ class _InterventionPageState extends State<InterventionPage> {
   }
 
   Widget _buildDesktopOptions(Question question, TextTheme textTheme) {
-    final bool isFour = question.options.length == 4;
+    final bool isFour = question.options.length == 4 || question.options.length == 2;
     return Center(
       child: SizedBox(
         width: 800,

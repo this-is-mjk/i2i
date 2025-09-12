@@ -148,7 +148,9 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   Widget _buildDesktopLayout(TextTheme textTheme) {
-    final bool isFour = widget.question.options.length == 4;
+    final bool isFour =
+        widget.question.options.length == 4 ||
+        widget.question.options.length == 2;
     return Column(
       children: [
         // Left: Image
