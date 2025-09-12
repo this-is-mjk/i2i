@@ -1,19 +1,17 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:i2i/components/common_button.dart';
-import 'package:i2i/components/objects/questions.dart';
+import 'package:i2i/utils/common_button.dart';
+import 'package:i2i/utils/objects/questions.dart';
 import 'package:i2i/database/result.dart';
 import 'package:i2i/database/result_database.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class ResultPage extends StatefulWidget {
   final List<Question> questions;
+  final bool test;
 
-  const ResultPage({super.key, required this.questions});
+  const ResultPage({super.key, required this.questions, required this.test});
 
   @override
   State<ResultPage> createState() => _ResultPageState();
@@ -39,27 +37,29 @@ class _ResultPageState extends State<ResultPage> {
     int? level = prefs.getInt("level");
 
     correctAnswers = widget.questions.where((q) => q.isAnswerCorrect()).length;
-    totalTime = widget.questions.fold(
-      0,
-      (sum, q) => sum + q.timeTakenInSeconds,
-    );
-    maxTime = widget.questions
-        .map((q) => q.timeTakenInSeconds)
-        .reduce((a, b) => a > b ? a : b);
 
-    final correctQuestions =
-        widget.questions.where((q) => q.isAnswerCorrect()).toList();
-    if (correctQuestions.isNotEmpty) {
-      avgCorrectTime =
-          correctQuestions.fold(0, (sum, q) => sum + q.timeTakenInSeconds) /
-          correctQuestions.length;
+    if (widget.test) {
+      totalTime = widget.questions.fold(
+        0,
+        (sum, q) => sum + q.timeTakenInSeconds,
+      );
+      maxTime = widget.questions
+          .map((q) => q.timeTakenInSeconds)
+          .reduce((a, b) => a > b ? a : b);
+
+      final correctQuestions =
+          widget.questions.where((q) => q.isAnswerCorrect()).toList();
+      if (correctQuestions.isNotEmpty) {
+        avgCorrectTime =
+            correctQuestions.fold(0, (sum, q) => sum + q.timeTakenInSeconds) /
+            correctQuestions.length;
+      }
+      await _saveResultsToDatabase(
+        userId ?? "unknown",
+        userName ?? "Guest",
+        level ?? 1,
+      );
     }
-
-    await _saveResultsToDatabase(
-      userId ?? "unknown",
-      userName ?? "Guest",
-      level ?? 1,
-    );
     setState(() {
       isSaving = false;
     });
@@ -98,16 +98,6 @@ class _ResultPageState extends State<ResultPage> {
       );
 
       await resultDao.insertResult(result);
-
-      // await db.insert('results', {
-      //   'userId': userId,
-      //   'userName': userName,
-      //   'answered': q.answered ?? "",
-      //   'correctAnswer': q.correctAnswer,
-      //   'level': level,
-      //   'isCorrect': q.isAnswerCorrect() ? 1 : 0,
-      //   'timeTaken': q.timeTakenInSeconds,
-      // });
     }
   }
 
@@ -186,7 +176,7 @@ class _ResultPageState extends State<ResultPage> {
                   ),
                   resultText(
                     10,
-                    "Congratulations",
+                    widget.test ? "Congratulations" : "Session Finished!",
                     28,
                     FontWeight.w300,
                     Colors.black.withValues(alpha: 0.8),
@@ -207,7 +197,7 @@ class _ResultPageState extends State<ResultPage> {
                     Colors.grey.shade600,
                   ),
                   Container(
-                    width: size.width * .7,
+                    width: size.width * .7 < 300 ? size.width * .7 : 300,
                     height: 16,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
@@ -226,32 +216,35 @@ class _ResultPageState extends State<ResultPage> {
                       ),
                     ),
                   ),
-                  resultText(
-                    30,
-                    'Total Time: ${totalTime / 1000}s',
-                    22,
-                    FontWeight.w600,
-                    Colors.grey.shade600,
-                  ),
-                  resultText(
-                    30,
-                    "Avg Time (Correct) ${(avgCorrectTime / 1000).toStringAsFixed(2)}s",
-                    18,
-                    FontWeight.w600,
-                    Colors.grey.shade600,
-                  ),
-                  resultText(
-                    30,
-                    'Max Time on a Question: ${maxTime / 1000}s',
-                    18,
-                    FontWeight.w600,
-                    Colors.grey.shade600,
-                  ),
+                  if (widget.test) ...[
+                    resultText(
+                      30,
+                      'Total Time: ${totalTime / 1000}s',
+                      22,
+                      FontWeight.w600,
+                      Colors.grey.shade600,
+                    ),
+                    resultText(
+                      30,
+                      "Avg Time (Correct) ${(avgCorrectTime / 1000).toStringAsFixed(2)}s",
+                      18,
+                      FontWeight.w600,
+                      Colors.grey.shade600,
+                    ),
+                    resultText(
+                      30,
+                      'Max Time on a Question: ${maxTime / 1000}s',
+                      18,
+                      FontWeight.w600,
+                      Colors.grey.shade600,
+                    ),
+                  ],
                   Container(
                     alignment: Alignment.bottomCenter,
                     padding: const EdgeInsets.fromLTRB(10, 20, 10, 30),
 
                     child: CommonButton(
+                      width: 300,
                       onPressed: () {
                         Navigator.pop(context);
                       },

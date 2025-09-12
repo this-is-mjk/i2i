@@ -1,5 +1,7 @@
 import 'package:floor/floor.dart';
 
+
+/// This is a table declaration
 @Entity(tableName: "results")
 class Result {
   @PrimaryKey(autoGenerate: true)
@@ -23,3 +25,4 @@ class Result {
     this.id,
   });
 }
+

@@ -18,7 +18,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  double baselineTime = 5.0;
+  double interventionlineTime = 2.0;
   String imagePattern = 'ABAB';
   int level = 1;
   int numImages = 4;
@@ -47,7 +47,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSavedValues() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      baselineTime = prefs.getDouble("baselineTime") ?? 5.0;
+      interventionlineTime = prefs.getDouble("interventionlineTime") ?? 2.0;
       imagePattern = prefs.getString("imagePattern") ?? 'ABAB';
       level = prefs.getInt("level") ?? 1;
       numImages = prefs.getInt("numImages") ?? 4;
@@ -145,6 +145,163 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (result != null) setState(() => userId = result);
                 },
               ),
+
+              SettingsTile.navigation(
+                leading: const Icon(Icons.delete_forever, color: Colors.red),
+                title: const Text('Delete User Data'),
+                onPressed: (_) async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder:
+                        (context) => AlertDialog(
+                          title: const Text('Confirm Deletion'),
+                          content: const Text(
+                            'Are you sure you want to delete all data of the user? This cannot be undone.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text(
+                                'Delete All',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                  );
+
+                  if (confirmed != true) return;
+                  try {
+                    final databaseDir = await getApplicationSupportDirectory();
+                    databaseDir.create(recursive: true);
+                    final dbpath = join(
+                      databaseDir.path,
+                      'baseline_results.db',
+                    );
+
+                    final database =
+                        await $FloorAppDatabase.databaseBuilder(dbpath).build();
+
+                    final resultDao = database.resultDao;
+
+                    await resultDao.deleteAllResultsForUser(userId);
+
+                    // Notify user
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'All data for the user has been deleted.',
+                        ),
+                        backgroundColor: Colors.green[300],
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error deleting data: $e'),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                  }
+                },
+              ),
+              SettingsTile.navigation(
+                leading: const Icon(Icons.upload_file, color: Colors.blue),
+                title: const Text('Export User Data as CSV'),
+                onPressed: (_) async {
+                  try {
+                    final databaseDir = await getApplicationSupportDirectory();
+                    databaseDir.create(recursive: true);
+                    final dbpath = join(
+                      databaseDir.path,
+                      'baseline_results.db',
+                    );
+
+                    final database =
+                        await $FloorAppDatabase.databaseBuilder(dbpath).build();
+
+                    final resultDao = database.resultDao;
+
+                    final results = await resultDao.findAllResultsForUser(
+                      userId,
+                    );
+
+                    final dataList = [
+                      [
+                        "id",
+                        "userId",
+                        "userName",
+                        "answered",
+                        "correctAnswer",
+                        "level",
+                        "isCorrect",
+                        "timeTaken",
+                      ],
+                    ];
+
+                    for (Result e in results) {
+                      dataList.add([
+                        e.id.toString(),
+                        e.userId.toString(),
+                        e.userName.toString(),
+                        e.answered.toString(),
+                        e.correctAnswer.toString(),
+                        e.level.toString(),
+                        e.isCorrect.toString(),
+                        e.timeTaken.toString(),
+                      ]);
+                    }
+
+                    // Convert to CSV string
+                    String csvData = const ListToCsvConverter().convert(
+                      dataList,
+                    );
+
+                    // Request permissions
+                    if (Platform.isAndroid || Platform.isIOS) {
+                      var status = await Permission.storage.request();
+                      if (!status.isGranted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Storage permission denied'),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                        return;
+                      }
+                    }
+                    // Get Downloads directory
+                    final exportDir = await getExportPath();
+                    final exportFileName = join(
+                      exportDir,
+                      'quiz_results_export.csv',
+                    );
+                    final exportFile = File(exportFileName);
+
+                    // Write the file
+                    await exportFile.writeAsString(csvData);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Exported to ${exportFile.path}'),
+                        backgroundColor: Colors.green[300],
+                      ),
+                    );
+                  } catch (e) {
+                    debugPrint('Error exporting data: $e');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Failed to export data'),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                  }
+                },
+              ),
             ],
           ),
           SettingsSection(
@@ -152,13 +309,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             tiles: <SettingsTile>[
               SettingsTile.navigation(
                 title: const Text('Per Image Time'),
-                value: Text('${baselineTime.toStringAsFixed(1)} sec'),
+                value: Text('${interventionlineTime.toStringAsFixed(1)} sec'),
                 onPressed: (_) async {
                   double? result = await showDialog<double>(
                     context: context,
                     builder: (context) {
                       TextEditingController controller = TextEditingController(
-                        text: baselineTime.toStringAsFixed(1),
+                        text: interventionlineTime.toStringAsFixed(1),
                       );
                       String? errorText;
 
@@ -201,7 +358,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 onPressed: () {
                                   final val = double.tryParse(controller.text);
                                   if (val != null && val >= 1 && val <= 10) {
-                                    _saveValue("baselineTime", val);
+                                    _saveValue("interventionlineTime", val);
                                     Navigator.pop(context, val);
                                   } else {
                                     setState(() {
@@ -219,7 +376,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                   );
 
-                  if (result != null) setState(() => baselineTime = result);
+                  if (result != null)
+                    setState(() => interventionlineTime = result);
                 },
               ),
 
@@ -417,16 +575,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (confirmed != true) return;
                   try {
                     // Delete all data from your SQLite tables
-                    final dbPath = await getDatabasesPath();
-                    final path = join(dbPath, 'baseline_results.db');
-                    final db = await openDatabase(path);
+                    final databaseDir = await getApplicationSupportDirectory();
+                    databaseDir.create(recursive: true);
+                    final dbpath = join(
+                      databaseDir.path,
+                      'baseline_results.db',
+                    );
 
-                    // delete all the tables (currently we have only one)
-                    await db.transaction((txn) async {
-                      await txn.delete('results'); // delete the table
-                    });
+                    final database =
+                        await $FloorAppDatabase.databaseBuilder(dbpath).build();
 
-                    await db.close();
+                    final resultDao = database.resultDao;
+
+                    await resultDao.deleteAllResults();
 
                     // Notify user
                     ScaffoldMessenger.of(context).showSnackBar(

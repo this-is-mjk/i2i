@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:i2i/components/common_button.dart';
+import 'package:i2i/screens/intervention.dart';
+import 'package:i2i/utils/common_button.dart';
 import 'package:i2i/database/result_database.dart';
 import 'package:i2i/screens/quiz_screen.dart';
 import 'package:lottie/lottie.dart';
@@ -9,66 +9,12 @@ import 'package:path_provider/path_provider.dart';
 
 import '../screens/settings_screen.dart'; // Import the settings screen
 
-// final ThemeData lightTheme = ThemeData(
-//   brightness: Brightness.light,
-//   primaryColor: Colors.black,
-//   scaffoldBackgroundColor: Colors.white,
-//   cardColor: Colors.white,
-//   textTheme: GoogleFonts.robotoTextTheme().copyWith(
-//     titleLarge: TextStyle(
-//       fontSize: 20.0,
-//       fontWeight: FontWeight.bold,
-//       color: Colors.black,
-//     ),
-//     bodyMedium: TextStyle(fontSize: 16.0, color: Colors.grey[700]),
-//   ),
-//   inputDecorationTheme: InputDecorationTheme(
-//     filled: true,
-//     fillColor: Colors.grey[200],
-//     border: OutlineInputBorder(
-//       borderRadius: BorderRadius.circular(12.0),
-//       borderSide: BorderSide.none,
-//     ),
-//   ),
-//   iconTheme: IconThemeData(color: Colors.black),
-//   chipTheme: ChipThemeData(
-//     backgroundColor: Colors.grey[200]!,
-//     labelStyle: TextStyle(color: Colors.black),
-//     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-//   ),
-//   elevatedButtonTheme: ElevatedButtonThemeData(
-//     style: ElevatedButton.styleFrom(
-//       backgroundColor: Colors.black,
-//       foregroundColor: Colors.white,
-//       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2.0)),
-//       elevation: 2.0,
-//       padding: EdgeInsets.all(20),
-//     ),
-//   ),
-//   textButtonTheme: TextButtonThemeData(
-//     style: TextButton.styleFrom(
-//       foregroundColor: Colors.black,
-//       padding: EdgeInsets.all(20),
-//     ),
-//   ),
-//   floatingActionButtonTheme: FloatingActionButtonThemeData(
-//     backgroundColor: Colors.black,
-//     foregroundColor: Colors.white,
-//     elevation: 2.0,
-//   ),
-//   appBarTheme: AppBarTheme(
-//     backgroundColor: Colors.black,
-//     foregroundColor: Colors.white,
-//     elevation: 2.0,
-//   ),
-// );
-
 final ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
   primaryColor: Colors.white,
   scaffoldBackgroundColor: Colors.black,
   cardColor: Colors.grey[900],
-  textTheme: GoogleFonts.robotoTextTheme(ThemeData.dark().textTheme).copyWith(
+  textTheme: TextTheme(
     titleLarge: TextStyle(
       fontSize: 20.0,
       fontWeight: FontWeight.bold,
@@ -132,8 +78,10 @@ final ThemeData darkTheme = ThemeData(
   ),
 );
 
-void runTest() {
-  return;
+void runTest(BuildContext context) {
+  Navigator.of(
+    context,
+  ).push(MaterialPageRoute(builder: (context) => const Intervention()));
 }
 
 void runBaseLine(BuildContext context) {
@@ -226,7 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             SizedBox(height: 5.0),
             CommonButton(
-              onPressed: runTest,
+              onPressed: () => runTest(context),
               text: 'Intervention',
               isOutlined: true,
             ),

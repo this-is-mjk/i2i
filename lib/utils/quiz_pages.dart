@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:i2i/components/objects/questions.dart';
-import 'package:i2i/components/quiz_page.dart';
+import 'package:i2i/utils/objects/questions.dart';
+import 'package:i2i/utils/quiz_page.dart';
 import 'package:i2i/screens/quiz_results.dart';
 
 class QuizPages extends StatefulWidget {
@@ -58,13 +58,15 @@ class _QuizPagesState extends State<QuizPages> with TickerProviderStateMixin {
                   onNext: () {
                     if (_currentPageIndex < questionCount - 1) {
                       _updateCurrentPageIndex(_currentPageIndex + 1);
-                    } else { 
+                    } else {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder:
-                              (context) =>
-                                  ResultPage(questions: widget.questions),
+                              (context) => ResultPage(
+                                questions: widget.questions,
+                                test: true,
+                              ),
                         ),
                       );
                     }
@@ -134,29 +136,29 @@ class PageIndicator extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            IconButton(
-              splashRadius: 16.0,
-              padding: EdgeInsets.zero,
-              onPressed:
-                  currentPageIndex > 0
-                      ? () => onUpdateCurrentPageIndex(currentPageIndex - 1)
-                      : null,
-              icon: const Icon(Icons.arrow_left_rounded, size: 32.0),
-            ),
+            // IconButton(
+            //   splashRadius: 16.0,
+            //   padding: EdgeInsets.zero,
+            //   onPressed:
+            //       currentPageIndex > 0
+            //           ? () => onUpdateCurrentPageIndex(currentPageIndex - 1)
+            //           : null,
+            //   icon: const Icon(Icons.arrow_left_rounded, size: 32.0),
+            // ),
             TabPageSelector(
               controller: tabController,
               color: colorScheme.surface,
               selectedColor: colorScheme.primary,
             ),
-            IconButton(
-              splashRadius: 16.0,
-              padding: EdgeInsets.zero,
-              onPressed:
-                  currentPageIndex < tabController.length - 1
-                      ? () => onUpdateCurrentPageIndex(currentPageIndex + 1)
-                      : null,
-              icon: const Icon(Icons.arrow_right_rounded, size: 32.0),
-            ),
+            // IconButton(
+            //   splashRadius: 16.0,
+            //   padding: EdgeInsets.zero,
+            //   onPressed:
+            //       currentPageIndex < tabController.length - 1
+            //           ? () => onUpdateCurrentPageIndex(currentPageIndex + 1)
+            //           : null,
+            //   icon: const Icon(Icons.arrow_right_rounded, size: 32.0),
+            // ),
           ],
         ),
       ),

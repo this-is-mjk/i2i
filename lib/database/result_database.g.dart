@@ -114,7 +114,7 @@ class _$ResultDao extends ResultDao {
   _$ResultDao(
     this.database,
     this.changeListener,
-  )   : _queryAdapter = QueryAdapter(database, changeListener),
+  )   : _queryAdapter = QueryAdapter(database),
         _resultInsertionAdapter = InsertionAdapter(
             database,
             'results',
@@ -127,8 +127,7 @@ class _$ResultDao extends ResultDao {
                   'level': item.level,
                   'isCorrect': item.isCorrect,
                   'timeTaken': item.timeTaken
-                },
-            changeListener);
+                });
 
   final sqflite.DatabaseExecutor database;
 
@@ -153,8 +152,8 @@ class _$ResultDao extends ResultDao {
   }
 
   @override
-  Stream<Result?> findResultById(int id) {
-    return _queryAdapter.queryStream('SELECT * FROM results WHERE id = ?1',
+  Future<List<Result>> findAllResultsForUser(String userId) async {
+    return _queryAdapter.queryList('SELECT * FROM results WHERE userId = ?1',
         mapper: (Map<String, Object?> row) => Result(
             row['userId'] as String,
             row['userName'] as String,
@@ -164,13 +163,38 @@ class _$ResultDao extends ResultDao {
             row['isCorrect'] as int,
             row['timeTaken'] as int,
             id: row['id'] as int?),
-        arguments: [id],
-        queryableName: 'results',
-        isView: false);
+        arguments: [userId]);
   }
 
   @override
-  Future<void> insertResult(Result Result) async {
-    await _resultInsertionAdapter.insert(Result, OnConflictStrategy.abort);
+  Future<List<Result>> findWrongResultsForUser(String userId) async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM results WHERE isCorrect = 0 AND userId = ?1',
+        mapper: (Map<String, Object?> row) => Result(
+            row['userId'] as String,
+            row['userName'] as String,
+            row['answered'] as String,
+            row['correctAnswer'] as String,
+            row['level'] as int,
+            row['isCorrect'] as int,
+            row['timeTaken'] as int,
+            id: row['id'] as int?),
+        arguments: [userId]);
+  }
+
+  @override
+  Future<void> deleteAllResultsForUser(String userId) async {
+    await _queryAdapter.queryNoReturn('DELETE FROM results WHERE userId = ?1',
+        arguments: [userId]);
+  }
+
+  @override
+  Future<void> deleteAllResults() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM results');
+  }
+
+  @override
+  Future<void> insertResult(Result result) async {
+    await _resultInsertionAdapter.insert(result, OnConflictStrategy.abort);
   }
 }
