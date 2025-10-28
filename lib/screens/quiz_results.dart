@@ -90,8 +90,8 @@ class _ResultPageState extends State<ResultPage> {
 
     for (var q in widget.questions) {
       final result = Result(
-        type,
         userId,
+        type,
         userName,
         q.answered ?? "",
         q.correctAnswer,
