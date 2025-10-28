@@ -65,6 +65,92 @@ class CorrectAnswerDialog extends StatelessWidget {
   }
 }
 
+// class InterventionPage extends StatefulWidget {
+//   final List<Question> questions;
+
+//   const InterventionPage({super.key, required this.questions});
+
+//   @override
+//   State<InterventionPage> createState() => _InterventionPageState();
+// }
+
+// class _InterventionPageState extends State<InterventionPage> {
+//   late PageController _pageController;
+//   int _currentPageIndex = 0;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _pageController = PageController();
+//   }
+
+//   @override
+//   void dispose() {
+//     _pageController.dispose();
+//     super.dispose();
+//   }
+
+//   Future<void> _answerQuestion(
+//     String selectedAnswer,
+//     int index,
+//     bool isMobile,
+//   ) async {
+//     final question = widget.questions[index];
+//     final isCorrect = selectedAnswer == question.correctAnswer;
+
+//     setState(() {
+//       question.answered = selectedAnswer;
+//     });
+
+//     await showDialog(
+//       context: context,
+//       barrierDismissible: false,
+//       builder:
+//           (context) =>
+//               CelebrationDialog(isCorrect: isCorrect, isMobile: isMobile),
+//     );
+
+//     // If wrong also show correct answer
+//     if (!isCorrect) {
+//       await showDialog(
+//         context: context,
+//         barrierDismissible: false,
+//         builder:
+//             (context) => CorrectAnswerDialog(
+//               correctAnswer: question.correctAnswer,
+//               isMobile: isMobile,
+//             ),
+//       );
+//     }
+
+//     // Short delay
+//     await Future.delayed(const Duration(milliseconds: 500));
+
+//     // Move to next or results
+//     if (_currentPageIndex < widget.questions.length - 1) {
+//       _goToPage(_currentPageIndex + 1);
+//     } else {
+//       Navigator.pushReplacement(
+//         context,
+//         MaterialPageRoute(
+//           builder:
+//               (context) => ResultPage(questions: widget.questions, test: false),
+//         ),
+//       );
+//     }
+//   }
+
+//   void _goToPage(int index) {
+//     _pageController.animateToPage(
+//       index,
+//       duration: const Duration(milliseconds: 400),
+//       curve: Curves.easeInOut,
+//     );
+//     setState(() {
+//       _currentPageIndex = index;
+//     });
+//   }
+
 class InterventionPage extends StatefulWidget {
   final List<Question> questions;
 
@@ -77,11 +163,13 @@ class InterventionPage extends StatefulWidget {
 class _InterventionPageState extends State<InterventionPage> {
   late PageController _pageController;
   int _currentPageIndex = 0;
+  late DateTime _startTime; // --- ADDED --- To track time per question
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    _startTime = DateTime.now(); // --- ADDED --- Start timer for the first page
   }
 
   @override
@@ -95,7 +183,13 @@ class _InterventionPageState extends State<InterventionPage> {
     int index,
     bool isMobile,
   ) async {
+    // --- ADDED --- Stop timer and record the time
+    // Do this *before* any `await` calls for accuracy
+    final elapsed = DateTime.now().difference(_startTime).inMilliseconds;
     final question = widget.questions[index];
+    question.timeTakenInSeconds =
+        elapsed; // Note: 'timeTakenInSeconds' is a bit of a misnomer if storing ms
+
     final isCorrect = selectedAnswer == question.correctAnswer;
 
     setState(() {
@@ -149,6 +243,8 @@ class _InterventionPageState extends State<InterventionPage> {
     setState(() {
       _currentPageIndex = index;
     });
+    // --- ADDED --- Restart the timer for the new page
+    _startTime = DateTime.now();
   }
 
   @override

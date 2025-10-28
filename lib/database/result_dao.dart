@@ -9,7 +9,7 @@ abstract class ResultDao {
   @Query('SELECT * FROM results WHERE userId = :userId')
   Future<List<Result>> findAllResultsForUser(String userId);
 
-  @Query('SELECT * FROM results WHERE isCorrect = 0 AND userId = :userId')
+  @Query('SELECT * FROM results WHERE isCorrect = 0 AND userId = :userId AND type = \'test\'')
   Future<List<Result>> findWrongResultsForUser(String userId);
 
   @Query('DELETE FROM results WHERE userId = :userId')

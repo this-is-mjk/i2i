@@ -172,17 +172,8 @@ class _$ResultDao extends ResultDao {
   @override
   Future<List<Result>> findWrongResultsForUser(String userId) async {
     return _queryAdapter.queryList(
-        'SELECT * FROM results WHERE isCorrect = 0 AND userId = ?1',
-        mapper: (Map<String, Object?> row) => Result(
-            row['userId'] as String,
-            row['type'] as String,
-            row['userName'] as String,
-            row['answered'] as String,
-            row['correctAnswer'] as String,
-            row['level'] as int,
-            row['isCorrect'] as int,
-            row['timeTaken'] as int,
-            id: row['id'] as int?),
+        'SELECT * FROM results WHERE isCorrect = 0 AND userId = ?1 AND type = \'test\'',
+        mapper: (Map<String, Object?> row) => Result(row['userId'] as String, row['type'] as String, row['userName'] as String, row['answered'] as String, row['correctAnswer'] as String, row['level'] as int, row['isCorrect'] as int, row['timeTaken'] as int, id: row['id'] as int?),
         arguments: [userId]);
   }
 

@@ -233,6 +233,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     final dataList = [
                       [
                         "id",
+                        "type",
                         "userId",
                         "userName",
                         "answered",
@@ -246,6 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     for (Result e in results) {
                       dataList.add([
                         e.id.toString(),
+                        e.type.toString(),
                         e.userId.toString(),
                         e.userName.toString(),
                         e.answered.toString(),
@@ -628,6 +630,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     final dataList = [
                       [
                         "id",
+                        "type",
                         "userId",
                         "userName",
                         "answered",
@@ -641,6 +644,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     for (Result e in results) {
                       dataList.add([
                         e.id.toString(),
+                        e.type.toString(),
                         e.userId.toString(),
                         e.userName.toString(),
                         e.answered.toString(),
