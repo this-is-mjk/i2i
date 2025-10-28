@@ -51,7 +51,7 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void _stopTiming() {
-    final elapsed = DateTime.now().difference(_startTime).inMilliseconds;
+    final elapsed = DateTime.now().difference(_startTime).inSeconds;
     widget.question.timeTakenInSeconds += elapsed;
   }
 
@@ -72,13 +72,14 @@ class _QuizPageState extends State<QuizPage> {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ///same for both
           // Question Text
           Text(
             widget.question.questionString,
             style: textTheme.titleLarge,
-            textAlign: TextAlign.center,
+            textAlign: TextAlign.left,
           ),
 
           // const SizedBox(height: 1),

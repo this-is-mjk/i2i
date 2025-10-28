@@ -96,7 +96,7 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `results` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `userId` TEXT NOT NULL, `userName` TEXT NOT NULL, `answered` TEXT NOT NULL, `correctAnswer` TEXT NOT NULL, `level` INTEGER NOT NULL, `isCorrect` INTEGER NOT NULL, `timeTaken` INTEGER NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `results` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `type` TEXT NOT NULL, `userId` TEXT NOT NULL, `userName` TEXT NOT NULL, `answered` TEXT NOT NULL, `correctAnswer` TEXT NOT NULL, `level` INTEGER NOT NULL, `isCorrect` INTEGER NOT NULL, `timeTaken` INTEGER NOT NULL)');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -120,6 +120,7 @@ class _$ResultDao extends ResultDao {
             'results',
             (Result item) => <String, Object?>{
                   'id': item.id,
+                  'type': item.type,
                   'userId': item.userId,
                   'userName': item.userName,
                   'answered': item.answered,
@@ -142,6 +143,7 @@ class _$ResultDao extends ResultDao {
     return _queryAdapter.queryList('SELECT * FROM results',
         mapper: (Map<String, Object?> row) => Result(
             row['userId'] as String,
+            row['type'] as String,
             row['userName'] as String,
             row['answered'] as String,
             row['correctAnswer'] as String,
@@ -156,6 +158,7 @@ class _$ResultDao extends ResultDao {
     return _queryAdapter.queryList('SELECT * FROM results WHERE userId = ?1',
         mapper: (Map<String, Object?> row) => Result(
             row['userId'] as String,
+            row['type'] as String,
             row['userName'] as String,
             row['answered'] as String,
             row['correctAnswer'] as String,
@@ -172,6 +175,7 @@ class _$ResultDao extends ResultDao {
         'SELECT * FROM results WHERE isCorrect = 0 AND userId = ?1',
         mapper: (Map<String, Object?> row) => Result(
             row['userId'] as String,
+            row['type'] as String,
             row['userName'] as String,
             row['answered'] as String,
             row['correctAnswer'] as String,

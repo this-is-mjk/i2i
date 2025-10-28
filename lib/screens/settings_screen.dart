@@ -309,13 +309,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             tiles: <SettingsTile>[
               SettingsTile.navigation(
                 title: const Text('Per Image Time'),
-                value: Text('${interventionlineTime.toStringAsFixed(1)} sec'),
+                value: Text('${interventionlineTime.toStringAsFixed(2)} sec'),
                 onPressed: (_) async {
                   double? result = await showDialog<double>(
                     context: context,
                     builder: (context) {
                       TextEditingController controller = TextEditingController(
-                        text: interventionlineTime.toStringAsFixed(1),
+                        text: interventionlineTime.toStringAsFixed(2),
                       );
                       String? errorText;
 
@@ -333,14 +333,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Time in seconds',
                                 errorText: errorText,
-                                hintText: 'Enter a value between 1 and 10',
+                                hintText: 'Enter a value between 0 and 10',
                               ),
                               onChanged: (value) {
                                 final val = double.tryParse(value);
-                                if (val == null || val < 1 || val > 10) {
+                                if (val == null || val < 0 || val > 10) {
                                   setState(() {
                                     errorText =
-                                        'Please enter a number between 1 and 10';
+                                        'Please enter a number between 0 and 10';
                                   });
                                 } else {
                                   setState(() {
@@ -357,13 +357,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               TextButton(
                                 onPressed: () {
                                   final val = double.tryParse(controller.text);
-                                  if (val != null && val >= 1 && val <= 10) {
+                                  if (val != null && val > 0 && val <= 10) {
                                     _saveValue("interventionlineTime", val);
                                     Navigator.pop(context, val);
                                   } else {
                                     setState(() {
                                       errorText =
-                                          'Please enter a valid number between 1 and 10';
+                                          'Please enter a valid number between 0 and 10';
                                     });
                                   }
                                 },
@@ -516,13 +516,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               TextButton(
                                 onPressed: () {
                                   final val = int.tryParse(controller.text);
-                                  if (val != null && val >= 1 && val <= 35) {
+                                  if (val != null && val >= 1 && val <= 34) {
                                     _saveValue("baselineQuestionNumber", val);
                                     Navigator.pop(context, val);
                                   } else {
                                     setState(() {
                                       errorText =
-                                          'Please enter a valid number between 1 and 35';
+                                          'Please enter a valid number between 1 and 34';
                                     });
                                   }
                                 },

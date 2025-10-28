@@ -54,18 +54,20 @@ class _ResultPageState extends State<ResultPage> {
             correctQuestions.fold(0, (sum, q) => sum + q.timeTakenInSeconds) /
             correctQuestions.length;
       }
-      await _saveResultsToDatabase(
-        userId ?? "unknown",
-        userName ?? "Guest",
-        level ?? 1,
-      );
     }
+    await _saveResultsToDatabase(
+      widget.test ? "test" : "intervention",
+      userId ?? "unknown",
+      userName ?? "Guest",
+      level ?? 1,
+    );
     setState(() {
       isSaving = false;
     });
   }
 
   Future<void> _saveResultsToDatabase(
+    String type,
     String userId,
     String userName,
     int level,
@@ -88,6 +90,7 @@ class _ResultPageState extends State<ResultPage> {
 
     for (var q in widget.questions) {
       final result = Result(
+        type,
         userId,
         userName,
         q.answered ?? "",

@@ -30,9 +30,9 @@ class _PatternAnimatedImageState extends State<PatternAnimatedImage> {
   Future<void> _initPrefs() async {
     prefs = await SharedPreferences.getInstance();
     pattern = prefs?.getString("imagePattern") ?? 'ABAB';
-    int seconds = prefs?.getDouble("interventionlineTime")?.toInt() ?? 2;
+    double seconds = prefs?.getDouble("interventionlineTime")?.toDouble() ?? 2;
 
-    _timer = Timer.periodic(Duration(seconds: seconds), (_) {
+    _timer = Timer.periodic(Duration(milliseconds: (seconds * 1000).round()), (_) {
       setState(() {
         _currentIndex = (_currentIndex + 1) % pattern.length;
       });

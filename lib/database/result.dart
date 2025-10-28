@@ -1,11 +1,11 @@
 import 'package:floor/floor.dart';
 
-
 /// This is a table declaration
 @Entity(tableName: "results")
 class Result {
   @PrimaryKey(autoGenerate: true)
   final int? id;
+  final String type;
   final String userId;
   final String userName;
   final String answered;
@@ -16,6 +16,7 @@ class Result {
 
   Result(
     this.userId,
+    this.type,
     this.userName,
     this.answered,
     this.correctAnswer,
@@ -25,4 +26,3 @@ class Result {
     this.id,
   });
 }
-

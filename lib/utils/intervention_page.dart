@@ -4,13 +4,21 @@ import 'package:i2i/utils/common_button.dart';
 import 'package:i2i/utils/objects/questions.dart';
 import 'package:i2i/screens/quiz_results.dart';
 
+// TODO: Mobile view UI correction
 class CelebrationDialog extends StatelessWidget {
   final bool isCorrect;
-  const CelebrationDialog({super.key, required this.isCorrect});
+  final bool isMobile;
+  const CelebrationDialog({
+    super.key,
+    required this.isCorrect,
+    required this.isMobile,
+  });
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      insetPadding:
+          isMobile ? EdgeInsets.only(right: 0) : EdgeInsets.only(right: 1000),
       title: Text(isCorrect ? "Correct!" : "Wrong"),
       content: Icon(
         isCorrect ? Icons.celebration : Icons.cancel,
@@ -29,11 +37,18 @@ class CelebrationDialog extends StatelessWidget {
 
 class CorrectAnswerDialog extends StatelessWidget {
   final String correctAnswer;
-  const CorrectAnswerDialog({super.key, required this.correctAnswer});
+  final bool isMobile;
+  const CorrectAnswerDialog({
+    super.key,
+    required this.correctAnswer,
+    required this.isMobile,
+  });
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      insetPadding:
+          isMobile ? EdgeInsets.only(right: 0) : EdgeInsets.only(right: 1000),
       title: const Text("Correct Answer"),
       content: Text(
         correctAnswer,
@@ -75,7 +90,11 @@ class _InterventionPageState extends State<InterventionPage> {
     super.dispose();
   }
 
-  Future<void> _answerQuestion(String selectedAnswer, int index) async {
+  Future<void> _answerQuestion(
+    String selectedAnswer,
+    int index,
+    bool isMobile,
+  ) async {
     final question = widget.questions[index];
     final isCorrect = selectedAnswer == question.correctAnswer;
 
@@ -83,21 +102,24 @@ class _InterventionPageState extends State<InterventionPage> {
       question.answered = selectedAnswer;
     });
 
-    // Show correct/incorrect dialog
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => CelebrationDialog(isCorrect: isCorrect),
+      builder:
+          (context) =>
+              CelebrationDialog(isCorrect: isCorrect, isMobile: isMobile),
     );
 
-    // If wrong → also show correct answer
+    // If wrong also show correct answer
     if (!isCorrect) {
       await showDialog(
         context: context,
         barrierDismissible: false,
         builder:
-            (context) =>
-                CorrectAnswerDialog(correctAnswer: question.correctAnswer),
+            (context) => CorrectAnswerDialog(
+              correctAnswer: question.correctAnswer,
+              isMobile: isMobile,
+            ),
       );
     }
 
@@ -143,18 +165,20 @@ class _InterventionPageState extends State<InterventionPage> {
         return Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Question ${index + 1}/${widget.questions.length}",
-                style: textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
+              // Question Number, text
+              // Text(
+              //   "Question ${index + 1}/${widget.questions.length}",
+              //   style: textTheme.titleLarge,
+              // ),
+              // const SizedBox(height: 16),
 
               // Question text
               Text(
                 question.questionString,
                 style: textTheme.headlineSmall,
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.left,
               ),
               const SizedBox(height: 24),
 
@@ -190,7 +214,8 @@ class _InterventionPageState extends State<InterventionPage> {
               child: CommonButton(
                 text: option,
                 isOutlined: true,
-                onPressed: () => _answerQuestion(option, _currentPageIndex),
+                onPressed:
+                    () => _answerQuestion(option, _currentPageIndex, true),
               ),
             ),
           ],
@@ -200,7 +225,8 @@ class _InterventionPageState extends State<InterventionPage> {
   }
 
   Widget _buildDesktopOptions(Question question, TextTheme textTheme) {
-    final bool isFour = question.options.length == 4 || question.options.length == 2;
+    final bool isFour =
+        question.options.length == 4 || question.options.length == 2;
     return Center(
       child: SizedBox(
         width: 800,
@@ -253,6 +279,7 @@ class _InterventionPageState extends State<InterventionPage> {
                                             () => _answerQuestion(
                                               option,
                                               _currentPageIndex,
+                                              false,
                                             ),
                                         text: option,
                                         isOutlined: true,
