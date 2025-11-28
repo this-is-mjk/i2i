@@ -3,11 +3,11 @@ import 'package:i2i/screens/intervention.dart';
 import 'package:i2i/utils/common_button.dart';
 import 'package:i2i/database/result_database.dart';
 import 'package:i2i/screens/quiz_screen.dart';
-import 'package:lottie/lottie.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-
-import '../screens/settings_screen.dart'; // Import the settings screen
+import 'package:i2i/screens/instructions_screen.dart';
+import 'package:i2i/utils/instructions.dart';
+import 'package:i2i/screens/settings_screen.dart';
 
 final ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
@@ -79,15 +79,35 @@ final ThemeData darkTheme = ThemeData(
 );
 
 void runTest(BuildContext context) {
-  Navigator.of(
-    context,
-  ).push(MaterialPageRoute(builder: (context) => const Intervention()));
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (context) => InstructionsScreen(
+        title: 'Intervention',
+        instructions: interventionInstructions,
+        onStart: () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const Intervention()),
+          );
+        },
+      ),
+    ),
+  );
 }
 
 void runBaseLine(BuildContext context) {
-  Navigator.of(
-    context,
-  ).push(MaterialPageRoute(builder: (context) => const QuizScreen()));
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (context) => InstructionsScreen(
+        title: 'Test',
+        instructions: testInstructions,
+        onStart: () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const QuizScreen()),
+          );
+        },
+      ),
+    ),
+  );
 }
 
 void main() async {
@@ -136,10 +156,29 @@ class _MyHomePageState extends State<MyHomePage> {
       flex: 4,
       child: Center(
         child: FractionallySizedBox(
-          widthFactor: isMobile ? 0.8 : 1,
+          widthFactor: isMobile ? 0.8 : 0.6, // Adjusted for better spacing
           child: AspectRatio(
             aspectRatio: 1,
-            child: Lottie.asset('assets/animations/home.json'),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(32.0), // Rounded corners
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    spreadRadius: 5,
+                    blurRadius: 15,
+                    offset: const Offset(0, 5), // Shadow position
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32.0), // Clips the image
+                child: Image.asset(
+                  'assets/appIcon/appIcon.png',
+                  fit: BoxFit.cover, // Ensures image fills the container
+                ),
+              ),
+            ),
           ),
         ),
       ),

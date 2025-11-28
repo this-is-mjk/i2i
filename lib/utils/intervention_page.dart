@@ -185,7 +185,7 @@ class _InterventionPageState extends State<InterventionPage> {
   ) async {
     // --- ADDED --- Stop timer and record the time
     // Do this *before* any `await` calls for accuracy
-    final elapsed = DateTime.now().difference(_startTime).inSeconds;
+    final elapsed = DateTime.now().difference(_startTime).inMilliseconds;
     final question = widget.questions[index];
     question.timeTakenInSeconds =
         elapsed; // Note: 'timeTakenInSeconds' is a bit of a misnomer if storing ms

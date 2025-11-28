@@ -12,9 +12,8 @@ class PatternAnimatedImage extends StatefulWidget {
 }
 
 class _PatternAnimatedImageState extends State<PatternAnimatedImage> {
-  late Timer _timer;
-  late String pattern; // e.g. "AABB", "ABBA", "ABAB"
-  late Duration duration;
+  Timer? _timer;
+  String pattern = 'ABAB'; // e.g. "AABB", "ABBA", "ABAB"
   int _currentIndex = 0;
   SharedPreferences? prefs;
 
@@ -32,7 +31,29 @@ class _PatternAnimatedImageState extends State<PatternAnimatedImage> {
     pattern = prefs?.getString("imagePattern") ?? 'ABAB';
     double seconds = prefs?.getDouble("interventionlineTime")?.toDouble() ?? 2;
 
-    _timer = Timer.periodic(Duration(milliseconds: (seconds * 1000).round()), (_) {
+    // Precache both asset variants used by the pattern so switching doesn't flicker.
+    if (mounted) {
+      final uniqueChars = pattern.split('').toSet();
+      final futures = <Future<void>>[];
+      for (final ch in uniqueChars) {
+        final prefix = ch == "A" ? A : B;
+        final suffix = ch == "A" ? '-c' : '-ec';
+        final asset = AssetImage("$prefix/${widget.id}$suffix.jpg");
+        futures.add(precacheImage(asset, context));
+      }
+      // Wait for all precache attempts to complete (best-effort)
+      try {
+        await Future.wait(futures);
+      } catch (_) {
+        // If a precache fails (missing asset), continue — we still want the animation.
+      }
+    }
+
+    // Start periodic timer after images are prepared to avoid visible reloads.
+    _timer = Timer.periodic(Duration(milliseconds: (seconds * 1000).round()), (
+      _,
+    ) {
+      if (!mounted) return;
       setState(() {
         _currentIndex = (_currentIndex + 1) % pattern.length;
       });
@@ -43,7 +64,7 @@ class _PatternAnimatedImageState extends State<PatternAnimatedImage> {
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 
