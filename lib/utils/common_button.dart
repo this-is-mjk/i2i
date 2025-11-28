@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 class CommonButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String text;
   final double width;
   final bool isOutlined;
   final TextStyle? textStyle;
+  final Color? color;
 
   const CommonButton({
     super.key,
@@ -14,6 +15,7 @@ class CommonButton extends StatelessWidget {
     this.width = double.infinity,
     this.isOutlined = false,
     this.textStyle,
+    this.color,
   });
 
   @override
@@ -33,10 +35,11 @@ class CommonButton extends StatelessWidget {
                 ? OutlinedButton(
                   onPressed: onPressed,
                   style: OutlinedButton.styleFrom(
+                    backgroundColor: color,
                     padding: EdgeInsets.symmetric(horizontal: 5, vertical: 8),
                     foregroundColor: Colors.white,
                     side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: color ?? Colors.white.withValues(alpha: 0.7),
                       width: 1,
                     ),
                     shape: RoundedRectangleBorder(
@@ -67,7 +70,7 @@ class CommonButton extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: onPressed,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
+                      backgroundColor: color ?? Colors.black,
                       foregroundColor: Colors.white,
                       elevation: 0, // using custom shadows instead
                       shape: RoundedRectangleBorder(

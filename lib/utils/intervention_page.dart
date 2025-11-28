@@ -3,154 +3,9 @@ import 'package:i2i/utils/animate_question_image.dart';
 import 'package:i2i/utils/common_button.dart';
 import 'package:i2i/utils/objects/questions.dart';
 import 'package:i2i/screens/quiz_results.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // TODO: Mobile view UI correction
-class CelebrationDialog extends StatelessWidget {
-  final bool isCorrect;
-  final bool isMobile;
-  const CelebrationDialog({
-    super.key,
-    required this.isCorrect,
-    required this.isMobile,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      insetPadding:
-          isMobile ? EdgeInsets.only(right: 0) : EdgeInsets.only(right: 1000),
-      title: Text(isCorrect ? "Correct!" : "Wrong"),
-      content: Icon(
-        isCorrect ? Icons.celebration : Icons.cancel,
-        size: 64,
-        color: isCorrect ? Colors.green : Colors.red,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("OK"),
-        ),
-      ],
-    );
-  }
-}
-
-class CorrectAnswerDialog extends StatelessWidget {
-  final String correctAnswer;
-  final bool isMobile;
-  const CorrectAnswerDialog({
-    super.key,
-    required this.correctAnswer,
-    required this.isMobile,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      insetPadding:
-          isMobile ? EdgeInsets.only(right: 0) : EdgeInsets.only(right: 1000),
-      title: const Text("Correct Answer"),
-      content: Text(
-        correctAnswer,
-        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        textAlign: TextAlign.center,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Got it"),
-        ),
-      ],
-    );
-  }
-}
-
-// class InterventionPage extends StatefulWidget {
-//   final List<Question> questions;
-
-//   const InterventionPage({super.key, required this.questions});
-
-//   @override
-//   State<InterventionPage> createState() => _InterventionPageState();
-// }
-
-// class _InterventionPageState extends State<InterventionPage> {
-//   late PageController _pageController;
-//   int _currentPageIndex = 0;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _pageController = PageController();
-//   }
-
-//   @override
-//   void dispose() {
-//     _pageController.dispose();
-//     super.dispose();
-//   }
-
-//   Future<void> _answerQuestion(
-//     String selectedAnswer,
-//     int index,
-//     bool isMobile,
-//   ) async {
-//     final question = widget.questions[index];
-//     final isCorrect = selectedAnswer == question.correctAnswer;
-
-//     setState(() {
-//       question.answered = selectedAnswer;
-//     });
-
-//     await showDialog(
-//       context: context,
-//       barrierDismissible: false,
-//       builder:
-//           (context) =>
-//               CelebrationDialog(isCorrect: isCorrect, isMobile: isMobile),
-//     );
-
-//     // If wrong also show correct answer
-//     if (!isCorrect) {
-//       await showDialog(
-//         context: context,
-//         barrierDismissible: false,
-//         builder:
-//             (context) => CorrectAnswerDialog(
-//               correctAnswer: question.correctAnswer,
-//               isMobile: isMobile,
-//             ),
-//       );
-//     }
-
-//     // Short delay
-//     await Future.delayed(const Duration(milliseconds: 500));
-
-//     // Move to next or results
-//     if (_currentPageIndex < widget.questions.length - 1) {
-//       _goToPage(_currentPageIndex + 1);
-//     } else {
-//       Navigator.pushReplacement(
-//         context,
-//         MaterialPageRoute(
-//           builder:
-//               (context) => ResultPage(questions: widget.questions, test: false),
-//         ),
-//       );
-//     }
-//   }
-
-//   void _goToPage(int index) {
-//     _pageController.animateToPage(
-//       index,
-//       duration: const Duration(milliseconds: 400),
-//       curve: Curves.easeInOut,
-//     );
-//     setState(() {
-//       _currentPageIndex = index;
-//     });
-//   }
-
 class InterventionPage extends StatefulWidget {
   final List<Question> questions;
 
@@ -163,13 +18,24 @@ class InterventionPage extends StatefulWidget {
 class _InterventionPageState extends State<InterventionPage> {
   late PageController _pageController;
   int _currentPageIndex = 0;
-  late DateTime _startTime; // --- ADDED --- To track time per question
+  late DateTime _startTime;
+  String? _selectedAnswer;
+  bool _answered = false;
+  double _feedbackDelay = 2.0;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
-    _startTime = DateTime.now(); // --- ADDED --- Start timer for the first page
+    _startTime = DateTime.now();
+    _loadFeedbackDelay();
+  }
+
+  Future<void> _loadFeedbackDelay() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _feedbackDelay = prefs.getDouble('feedbackDelayTime') ?? 2.0;
+    });
   }
 
   @override
@@ -183,44 +49,22 @@ class _InterventionPageState extends State<InterventionPage> {
     int index,
     bool isMobile,
   ) async {
-    // --- ADDED --- Stop timer and record the time
-    // Do this *before* any `await` calls for accuracy
+    if (_answered) return;
+
     final elapsed = DateTime.now().difference(_startTime).inMilliseconds;
     final question = widget.questions[index];
-    question.timeTakenInSeconds =
-        elapsed; // Note: 'timeTakenInSeconds' is a bit of a misnomer if storing ms
-
-    final isCorrect = selectedAnswer == question.correctAnswer;
+    question.timeTakenInSeconds = elapsed;
 
     setState(() {
       question.answered = selectedAnswer;
+      _selectedAnswer = selectedAnswer;
+      _answered = true;
     });
 
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder:
-          (context) =>
-              CelebrationDialog(isCorrect: isCorrect, isMobile: isMobile),
-    );
+    await Future.delayed(Duration(milliseconds: (_feedbackDelay * 1000).round()));
 
-    // If wrong also show correct answer
-    if (!isCorrect) {
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder:
-            (context) => CorrectAnswerDialog(
-              correctAnswer: question.correctAnswer,
-              isMobile: isMobile,
-            ),
-      );
-    }
+    if (!mounted) return; // else if i hit end, it can cause error
 
-    // Short delay
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // Move to next or results
     if (_currentPageIndex < widget.questions.length - 1) {
       _goToPage(_currentPageIndex + 1);
     } else {
@@ -242,8 +86,9 @@ class _InterventionPageState extends State<InterventionPage> {
     );
     setState(() {
       _currentPageIndex = index;
+      _answered = false;
+      _selectedAnswer = null;
     });
-    // --- ADDED --- Restart the timer for the new page
     _startTime = DateTime.now();
   }
 
@@ -301,9 +146,7 @@ class _InterventionPageState extends State<InterventionPage> {
           children: [
             Expanded(
               flex: 4,
-              child: PatternAnimatedImage(
-                id: question.imageId, // your Question should have an ID field
-              ),
+              child: PatternAnimatedImage(id: question.imageId),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 5),
@@ -311,7 +154,11 @@ class _InterventionPageState extends State<InterventionPage> {
                 text: option,
                 isOutlined: true,
                 onPressed:
-                    () => _answerQuestion(option, _currentPageIndex, true),
+                    _answered
+                        ? null
+                        : () =>
+                            _answerQuestion(option, _currentPageIndex, true),
+                color: _getButtonColor(option, question.correctAnswer),
               ),
             ),
           ],
@@ -330,9 +177,7 @@ class _InterventionPageState extends State<InterventionPage> {
           children: [
             Expanded(
               flex: 4,
-              child: PatternAnimatedImage(
-                id: question.imageId, // your Question should have an ID field
-              ),
+              child: PatternAnimatedImage(id: question.imageId),
             ),
             const SizedBox(height: 5.0),
             Expanded(
@@ -372,13 +217,19 @@ class _InterventionPageState extends State<InterventionPage> {
                                       width: double.infinity,
                                       child: CommonButton(
                                         onPressed:
-                                            () => _answerQuestion(
-                                              option,
-                                              _currentPageIndex,
-                                              false,
-                                            ),
+                                            _answered
+                                                ? null
+                                                : () => _answerQuestion(
+                                                  option,
+                                                  _currentPageIndex,
+                                                  false,
+                                                ),
                                         text: option,
                                         isOutlined: true,
+                                        color: _getButtonColor(
+                                          option,
+                                          question.correctAnswer,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -393,5 +244,14 @@ class _InterventionPageState extends State<InterventionPage> {
         ),
       ),
     );
+  }
+
+  Color? _getButtonColor(String option, String correctAnswer) {
+    if (!_answered) return null;
+    if (option == correctAnswer) return Colors.green.withValues(alpha: 0.7);
+    if (option == _selectedAnswer && option != correctAnswer) {
+      return Colors.red.withValues(alpha: 0.7);
+    }
+    return null;
   }
 }

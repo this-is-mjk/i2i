@@ -26,6 +26,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String userName = '';
   String userId = '';
   int baselineQuestionNumber = 5;
+  double feedbackDelayTime = 2.0;
 
   @override
   void initState() {
@@ -55,6 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       userName = prefs.getString("userName") ?? '';
       userId = prefs.getString("userId") ?? '';
       baselineQuestionNumber = prefs.getInt("baselineQuestionNumber") ?? 5;
+      feedbackDelayTime = prefs.getDouble("feedbackDelayTime") ?? 2.0;
     });
   }
 
@@ -382,7 +384,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setState(() => interventionlineTime = result);
                 },
               ),
+              SettingsTile.navigation(
+                title: const Text('Feedback Display Time'),
+                value: Text('${feedbackDelayTime.toStringAsFixed(2)} sec'),
+                onPressed: (_) async {
+                  double? result = await showDialog<double>(
+                    context: context,
+                    builder: (context) {
+                      TextEditingController controller = TextEditingController(
+                        text: feedbackDelayTime.toStringAsFixed(2),
+                      );
+                      String? errorText;
 
+                      return StatefulBuilder(
+                        builder: (context, setState) {
+                          return AlertDialog(
+                            title: const Text('Set Time (sec)'),
+                            content: TextField(
+                              controller: controller,
+                              autofocus: true,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              decoration: InputDecoration(
+                                labelText: 'Time in seconds',
+                                errorText: errorText,
+                                hintText: 'Enter a value between 0 and 10',
+                              ),
+                              onChanged: (value) {
+                                final val = double.tryParse(value);
+                                if (val == null || val < 0 || val > 10) {
+                                  setState(() => errorText = 'Invalid value');
+                                } else {
+                                  setState(() => errorText = null);
+                                }
+                              },
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  final val =
+                                      double.tryParse(controller.text);
+                                  if (val != null && val >= 0 && val <= 10) {
+                                    _saveValue('feedbackDelayTime', val);
+                                    Navigator.pop(context, val);
+                                  }
+                                },
+                                child: const Text('Save'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  );
+
+                  if (result != null) {
+                    setState(() => feedbackDelayTime = result);
+                  }
+                },
+              ),
               SettingsTile.navigation(
                 title: const Text('Image Pattern'),
                 value: Text(imagePattern),
