@@ -51,7 +51,7 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void _stopTiming() {
-    final elapsed = DateTime.now().difference(_startTime).inSeconds;
+    final elapsed = DateTime.now().difference(_startTime).inMilliseconds;
     widget.question.timeTakenInSeconds += elapsed;
   }
 
